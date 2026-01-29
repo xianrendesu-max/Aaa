@@ -11,9 +11,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const rooms = {};
 
+const sendOnlineCount = (room) => {
+  const count = rooms[room] ? Object.keys(rooms[room]).length : 0;
+  io.to(room).emit('onlineCount', count);
+};
+
 io.on('connection', socket => {
 
-  socket.on('joinRoom', ({ username, room }, cb) => {
+  socket.on('joinRoom', ({ username, room }, callback) => {
+    if (!username || !room) {
+      callback({ status: 'error', message: '入力不足です' });
+      return;
+    }
+
     if (!rooms[room]) rooms[room] = {};
     rooms[room][socket.id] = username;
 
@@ -21,20 +31,28 @@ io.on('connection', socket => {
 
     socket.to(room).emit('message', {
       user: 'system',
-      text: `${username} が参加しました`
+      text: `${username} が参加しました`,
+      image: null
     });
 
-    cb({ status: 'ok' });
+    socket.emit('message', {
+      user: 'system',
+      text: `仙人OpenChat「${room}」へようこそ`,
+      image: null
+    });
+
+    sendOnlineCount(room);
+    callback({ status: 'ok' });
   });
 
-  socket.on('chatMessage', msg => {
+  socket.on('chatMessage', ({ text, image }) => {
     const room = [...socket.rooms].find(r => r !== socket.id);
-    if (!room) return;
+    if (!room || !rooms[room]) return;
 
     io.to(room).emit('message', {
       user: rooms[room][socket.id],
-      text: msg.text,
-      image: msg.image
+      text: text || '',
+      image: image || null
     });
   });
 
@@ -46,8 +64,16 @@ io.on('connection', socket => {
 
         io.to(room).emit('message', {
           user: 'system',
-          text: `${name} が退出しました`
+          text: `${name} が退出しました`,
+          image: null
         });
+
+        sendOnlineCount(room);
+
+        if (Object.keys(rooms[room]).length === 0) {
+          delete rooms[room];
+        }
+        break;
       }
     }
   });
