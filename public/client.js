@@ -9,6 +9,7 @@ const joinBtn = document.getElementById('joinBtn');
 
 const roomTitle = document.getElementById('roomTitle');
 const messages = document.getElementById('messages');
+const onlineCount = document.getElementById('onlineCount');
 
 const messageForm = document.getElementById('messageForm');
 const messageInput = document.getElementById('messageInput');
@@ -16,7 +17,7 @@ const imageInput = document.getElementById('imageInput');
 
 let username = '';
 
-joinBtn.onclick = () => {
+joinBtn.addEventListener('click', () => {
   if (!nicknameInput.value || !roomInput.value) return;
 
   username = nicknameInput.value.trim();
@@ -24,18 +25,20 @@ joinBtn.onclick = () => {
   socket.emit('joinRoom', {
     username,
     room: roomInput.value.trim()
-  }, (res) => {
-    if (res.status !== 'ok') return alert(res.message);
+  }, res => {
+    if (res.status !== 'ok') {
+      alert(res.message);
+      return;
+    }
 
     login.classList.add('hidden');
     chat.classList.remove('hidden');
     chat.classList.add('fade-in');
-
     roomTitle.textContent = `仙人OpenChat｜${roomInput.value}`;
   });
-};
+});
 
-messageForm.onsubmit = e => {
+messageForm.addEventListener('submit', e => {
   e.preventDefault();
   if (!messageInput.value && !imageInput.files.length) return;
 
@@ -57,7 +60,7 @@ messageForm.onsubmit = e => {
     });
     messageInput.value = '';
   }
-};
+});
 
 socket.on('message', ({ user, text, image }) => {
   const div = document.createElement('div');
@@ -69,11 +72,15 @@ socket.on('message', ({ user, text, image }) => {
     div.className = 'message ' + (user === username ? 'self' : 'other');
     div.innerHTML = `
       <strong>${user}</strong><br>
-      ${text || ''}
+      ${text}
       ${image ? `<img src="${image}">` : ''}
     `;
   }
 
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
+});
+
+socket.on('onlineCount', count => {
+  onlineCount.textContent = `オンライン: ${count} 人`;
 });
