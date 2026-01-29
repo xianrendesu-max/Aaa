@@ -75,6 +75,7 @@ button {
   margin-bottom: 10px;
   padding: 10px 14px;
   border-radius: 14px;
+  word-wrap: break-word;
 }
 
 .self {
@@ -87,19 +88,30 @@ button {
   border: 1px solid #ddd;
 }
 
+/* ===== 管理者 ===== */
+.admin-message {
+  background: #fff9c4;
+  border: 1px solid #fbc02d;
+}
+
+.admin-label {
+  font-size: 12px;
+  color: #f57f17;
+  margin-left: 6px;
+}
+
+/* ===== システム ===== */
 .system {
   text-align: center;
   font-size: 13px;
   color: #999;
+  background: none;
+  border: none;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.message img {
-  max-width: 100%;
-  margin-top: 6px;
-  border-radius: 10px;
-}
-
-/* スマホ対応 */
+/* ===== スマホ対応 ===== */
 @media (max-width: 600px) {
   .card {
     height: 100vh;
@@ -107,6 +119,6 @@ button {
   }
 
   #messages {
-    height: calc(100vh - 260px);
+    height: calc(100vh - 240px);
   }
 }
