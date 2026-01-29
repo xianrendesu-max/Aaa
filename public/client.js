@@ -4,76 +4,68 @@ const login = document.getElementById('login');
 const chat = document.getElementById('chat');
 
 const nicknameInput = document.getElementById('nicknameInput');
-const roomInput = document.getElementById('roomInput');
 const joinBtn = document.getElementById('joinBtn');
 
-const roomTitle = document.getElementById('roomTitle');
 const messages = document.getElementById('messages');
 const onlineCount = document.getElementById('onlineCount');
 
 const messageForm = document.getElementById('messageForm');
 const messageInput = document.getElementById('messageInput');
-const imageInput = document.getElementById('imageInput');
 
 let username = '';
 
+/* ===== 参加 ===== */
 joinBtn.addEventListener('click', () => {
-  if (!nicknameInput.value || !roomInput.value) return;
+  if (!nicknameInput.value.trim()) return;
 
   username = nicknameInput.value.trim();
 
-  socket.emit('joinRoom', {
-    username,
-    room: roomInput.value.trim()
-  }, res => {
-    if (res.status !== 'ok') {
-      alert(res.message);
-      return;
+  socket.emit(
+    'joinRoom',
+    { username },
+    (res) => {
+      if (res.status !== 'ok') {
+        alert(res.message);
+        return;
+      }
+
+      login.classList.add('hidden');
+      chat.classList.remove('hidden');
+      chat.classList.add('fade-in');
     }
-
-    login.classList.add('hidden');
-    chat.classList.remove('hidden');
-    chat.classList.add('fade-in');
-    roomTitle.textContent = `仙人OpenChat｜${roomInput.value}`;
-  });
+  );
 });
 
-messageForm.addEventListener('submit', e => {
+/* ===== メッセージ送信 ===== */
+messageForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  if (!messageInput.value && !imageInput.files.length) return;
+  if (!messageInput.value.trim()) return;
 
-  if (imageInput.files.length) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      socket.emit('chatMessage', {
-        text: messageInput.value,
-        image: reader.result
-      });
-      messageInput.value = '';
-      imageInput.value = '';
-    };
-    reader.readAsDataURL(imageInput.files[0]);
-  } else {
-    socket.emit('chatMessage', {
-      text: messageInput.value,
-      image: null
-    });
-    messageInput.value = '';
-  }
+  socket.emit('chatMessage', {
+    text: messageInput.value
+  });
+
+  messageInput.value = '';
 });
 
-socket.on('message', ({ user, text, image }) => {
+/* ===== メッセージ受信 ===== */
+socket.on('message', ({ user, text, isAdmin }) => {
   const div = document.createElement('div');
 
   if (user === 'system') {
     div.className = 'message system';
     div.textContent = text;
   } else {
-    div.className = 'message ' + (user === username ? 'self' : 'other');
+    div.className =
+      'message ' +
+      (isAdmin ? 'admin-message' : (user === username ? 'self' : 'other'));
+
     div.innerHTML = `
-      <strong>${user}</strong><br>
+      <strong>
+        ${user}
+        ${isAdmin ? '<span class="admin-label">[管理者]</span>' : ''}
+      </strong><br>
       ${text}
-      ${image ? `<img src="${image}">` : ''}
     `;
   }
 
@@ -81,6 +73,7 @@ socket.on('message', ({ user, text, image }) => {
   messages.scrollTop = messages.scrollHeight;
 });
 
-socket.on('onlineCount', count => {
+/* ===== オンライン人数 ===== */
+socket.on('onlineCount', (count) => {
   onlineCount.textContent = `オンライン: ${count} 人`;
 });
