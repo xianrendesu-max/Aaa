@@ -1,7 +1,7 @@
 {
   "name": "sennin-openchat",
   "version": "1.0.0",
-  "description": "仙人OpenChat",
+  "description": "仙人OpenChat オープンリアルタイムチャット",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
