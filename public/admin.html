@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>仙人OpenChat 管理者</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="card fade-in">
+  <h2>管理者ログイン</h2>
+  <input id="adminName" placeholder="管理者名" />
+  <input id="adminPass" placeholder="パスワード" type="password" />
+  <button id="loginAdmin">ログイン</button>
+</div>
+
+<div id="adminChat" class="card hidden">
+  <h3>管理者投稿（黄色表示）</h3>
+  <div id="messages"></div>
+
+  <form id="adminForm">
+    <input id="adminMessage" placeholder="管理者メッセージ" />
+    <button type="submit">送信</button>
+  </form>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
