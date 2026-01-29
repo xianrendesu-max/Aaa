@@ -11,19 +11,21 @@
 <div id="login" class="card fade-in">
   <h2>仙人OpenChat</h2>
   <input id="nicknameInput" placeholder="ニックネーム" />
-  <input id="roomInput" placeholder="ルーム名（誰でも参加可）" />
   <button id="joinBtn">参加</button>
 </div>
 
 <div id="chat" class="card hidden">
-  <h3 id="roomTitle"></h3>
+  <h3 id="roomTitle">仙人OpenChat</h3>
   <div id="onlineCount">オンライン: 0 人</div>
 
   <div id="messages"></div>
 
   <form id="messageForm">
-    <input id="messageInput" placeholder="メッセージを入力…" autocomplete="off" />
-    <input type="file" id="imageInput" accept="image/*" />
+    <input
+      id="messageInput"
+      placeholder="メッセージを入力…"
+      autocomplete="off"
+    />
     <button type="submit">送信</button>
   </form>
 </div>
