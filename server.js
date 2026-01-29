@@ -9,73 +9,85 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const rooms = {};
+/* ===== 設定 ===== */
+const ROOM_NAME = 'sennin-openchat';
+const ADMIN_PASSWORD = 'senninkamikami';
 
-const sendOnlineCount = (room) => {
-  const count = rooms[room] ? Object.keys(rooms[room]).length : 0;
-  io.to(room).emit('onlineCount', count);
+/* ===== ユーザー管理 ===== */
+const users = {};
+
+/* ===== オンライン人数送信 ===== */
+const sendOnlineCount = () => {
+  io.to(ROOM_NAME).emit(
+    'onlineCount',
+    Object.keys(users).length
+  );
 };
 
-io.on('connection', socket => {
+io.on('connection', (socket) => {
 
-  socket.on('joinRoom', ({ username, room }, callback) => {
-    if (!username || !room) {
-      callback({ status: 'error', message: '入力不足です' });
+  /* ===== 参加 ===== */
+  socket.on('joinRoom', ({ username, adminKey }, callback = () => {}) => {
+    if (!username) {
+      callback({ status: 'error', message: 'ニックネーム必須' });
       return;
     }
 
-    if (!rooms[room]) rooms[room] = {};
-    rooms[room][socket.id] = username;
+    const isAdmin = adminKey === ADMIN_PASSWORD;
 
-    socket.join(room);
+    users[socket.id] = {
+      username,
+      isAdmin
+    };
 
-    socket.to(room).emit('message', {
+    socket.join(ROOM_NAME);
+
+    socket.to(ROOM_NAME).emit('message', {
       user: 'system',
       text: `${username} が参加しました`,
-      image: null
+      isAdmin: false
     });
 
     socket.emit('message', {
       user: 'system',
-      text: `仙人OpenChat「${room}」へようこそ`,
-      image: null
+      text: '仙人OpenChatへようこそ',
+      isAdmin: false
     });
 
-    sendOnlineCount(room);
-    callback({ status: 'ok' });
-  });
+    sendOnlineCount();
 
-  socket.on('chatMessage', ({ text, image }) => {
-    const room = [...socket.rooms].find(r => r !== socket.id);
-    if (!room || !rooms[room]) return;
-
-    io.to(room).emit('message', {
-      user: rooms[room][socket.id],
-      text: text || '',
-      image: image || null
+    callback({
+      status: 'ok',
+      isAdmin
     });
   });
 
+  /* ===== メッセージ ===== */
+  socket.on('chatMessage', ({ text }) => {
+    const user = users[socket.id];
+    if (!user || !text) return;
+
+    io.to(ROOM_NAME).emit('message', {
+      user: user.username,
+      text,
+      isAdmin: user.isAdmin
+    });
+  });
+
+  /* ===== 切断 ===== */
   socket.on('disconnect', () => {
-    for (const room in rooms) {
-      if (rooms[room][socket.id]) {
-        const name = rooms[room][socket.id];
-        delete rooms[room][socket.id];
+    const user = users[socket.id];
+    if (!user) return;
 
-        io.to(room).emit('message', {
-          user: 'system',
-          text: `${name} が退出しました`,
-          image: null
-        });
+    delete users[socket.id];
 
-        sendOnlineCount(room);
+    io.to(ROOM_NAME).emit('message', {
+      user: 'system',
+      text: `${user.username} が退出しました`,
+      isAdmin: false
+    });
 
-        if (Object.keys(rooms[room]).length === 0) {
-          delete rooms[room];
-        }
-        break;
-      }
-    }
+    sendOnlineCount();
   });
 });
 
